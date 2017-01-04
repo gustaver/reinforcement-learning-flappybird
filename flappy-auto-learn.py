@@ -60,6 +60,7 @@ class gameState():
     labels = []
     features_correct = []
     labels_correct = []
+    timestrained = 1
 
     def __init__(self):
         self.training = True
@@ -67,6 +68,7 @@ class gameState():
         self.labels = []
         self.features_correct = []
         self.labels_correct = []
+        timestrained = 1
 
     def set_training(self):
         self.training = not self.training
@@ -238,7 +240,6 @@ def mainGame(movementInfo):
     playerFlapAcc =  -9   # players speed on flapping
     playerFlapped = False # True when player flaps
 
-
     while True:
         flapped = False
         current_state = [playery, pow(playery, 2), upperPipes[0]['x'], pow(upperPipes[0]['x'], 2), upperPipes[0]['y'], pow(upperPipes[0]['y'], 2)]
@@ -250,6 +251,10 @@ def mainGame(movementInfo):
                 playerVelY = playerFlapAcc
                 playerFlapped = True
                 SOUNDS['wing'].play()
+        if len(gameState.features) > gameState.timestrained * 200:
+            gameState.classifier.fit(gameState.features, gameState.labels)
+            joblib.dump(gameState.classifier, 'classifier.pkl')
+            gameState.timestrained += 1
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 pygame.quit()
