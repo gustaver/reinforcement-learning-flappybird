@@ -1,2 +1,4 @@
 # machine-learning-flappybird
-A supervised machine learning algorithm built in Python to play the game Flappy Bird 
+A supervised machine learning algorithm built in Python to play the game Flappy Bird.
+
+Currently a work in progress. The machine learning algorithm is a linear support vector machine. There are several keys which can be used during play. The game starts in training mode, where the player can play and the players choices will be recorded. After sufficient play, the player can press "t" to activate learning mode, where the algorithm will learn the training data (this can take signifcant time based on the size of the training data). Once the training is done, the player can press "a" to initialise auto mode, where the algorithm will automatically make choices based on the game state. Keys "w" and "r" are used to write/read the training data respectively. Keys "s" and "f" are used to write/read the classifier algorithm respectively. Key "p" can be used during play to print training information to the terminal. 

@@ -179,35 +179,29 @@ def showWelcomeAnimation():
 
 
     while True:
-        for event in pygame.event.get():
-            if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
-                pygame.quit()
-                sys.exit()
-            if event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP):
-                # make first flap sound and return values for mainGame
-                SOUNDS['wing'].play()
-                return {
-                    'playery': playery + playerShmVals['val'],
-                    'basex': basex,
-                    'playerIndexGen': playerIndexGen,
-                }
+            SOUNDS['wing'].play()
+            return {
+                'playery': playery + playerShmVals['val'],
+                'basex': basex,
+                'playerIndexGen': playerIndexGen,
+            }
 
-        # adjust playery, playerIndex, basex
-        if (loopIter + 1) % 5 == 0:
-            playerIndex = playerIndexGen.next()
-        loopIter = (loopIter + 1) % 30
-        basex = -((-basex + 4) % baseShift)
-        playerShm(playerShmVals)
+    # adjust playery, playerIndex, basex
+    if (loopIter + 1) % 5 == 0:
+        playerIndex = playerIndexGen.next()
+    loopIter = (loopIter + 1) % 30
+    basex = -((-basex + 4) % baseShift)
+    playerShm(playerShmVals)
 
-        # draw sprites
-        SCREEN.blit(IMAGES['background'], (0,0))
-        SCREEN.blit(IMAGES['player'][playerIndex],
-                    (playerx, playery + playerShmVals['val']))
-        SCREEN.blit(IMAGES['message'], (messagex, messagey))
-        SCREEN.blit(IMAGES['base'], (basex, BASEY))
+    # draw sprites
+    SCREEN.blit(IMAGES['background'], (0,0))
+    SCREEN.blit(IMAGES['player'][playerIndex],
+                (playerx, playery + playerShmVals['val']))
+    SCREEN.blit(IMAGES['message'], (messagex, messagey))
+    SCREEN.blit(IMAGES['base'], (basex, BASEY))
 
-        pygame.display.update()
-        FPSCLOCK.tick(FPS)
+    pygame.display.update()
+    FPSCLOCK.tick(FPS)
 
 
 def mainGame(movementInfo):
@@ -251,6 +245,8 @@ def mainGame(movementInfo):
         if gameState.training == False:
             if gameState.classifier.predict([current_state])[0] == 1:
                 flapped = True
+                gameState.features_correct.append(current_state)
+                gameState.labels_correct.append(1)
                 playerVelY = playerFlapAcc
                 playerFlapped = True
                 SOUNDS['wing'].play()
@@ -389,15 +385,6 @@ def showGameOverScreen(crashInfo):
     SOUNDS['hit'].play()
     if not crashInfo['groundCrash']:
         SOUNDS['die'].play()
-
-    while True:
-        for event in pygame.event.get():
-            if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
-                pygame.quit()
-                sys.exit()
-            if event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP):
-                if playery + playerHeight >= BASEY - 1:
-                    return
 
         # player y shift
         if playery + playerHeight < BASEY - 1:
