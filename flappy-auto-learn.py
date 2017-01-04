@@ -240,9 +240,12 @@ def mainGame(movementInfo):
     playerFlapAcc =  -9   # players speed on flapping
     playerFlapped = False # True when player flaps
 
+    nextpipe = upperPipes[0]
+    currentpipe = upperPipes[0]
+
     while True:
         flapped = False
-        current_state = [playery, pow(playery, 2), upperPipes[0]['x'], pow(upperPipes[0]['x'], 2), upperPipes[0]['y'], pow(upperPipes[0]['y'], 2)]
+        current_state = [playery, pow(playery, 2), nextpipe['x'], pow(nextpipe['x'], 2), nextpipe['y'], pow(nextpipe['y'], 2)]
         if gameState.training == False:
             if gameState.classifier.predict([current_state])[0] == 1:
                 flapped = True
@@ -251,10 +254,10 @@ def mainGame(movementInfo):
                 playerVelY = playerFlapAcc
                 playerFlapped = True
                 SOUNDS['wing'].play()
-        if len(gameState.features) > gameState.timestrained * 200:
+        if len(gameState.features) > gameState.timestrained * 500:
             gameState.classifier.fit(gameState.features, gameState.labels)
             joblib.dump(gameState.classifier, 'classifier.pkl')
-            gameState.timestrained += 1
+            gameState.timestrained = gameState.timestrained * 2
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 pygame.quit()
@@ -314,16 +317,19 @@ def mainGame(movementInfo):
 
         # check for score
         playerMidPos = playerx + IMAGES['player'][0].get_width() / 2
-        for pipe in upperPipes:
-            pipeMidPos = 50 + pipe['x'] + IMAGES['pipe'][0].get_width() / 2
-            if pipeMidPos <= playerMidPos < pipeMidPos + 4:
-                score += 1
-                SOUNDS['point'].play()
-                for index in range(0, len(gameState.features_correct)):
-                    gameState.features.append(gameState.features_correct[index])
-                    gameState.labels.append(gameState.labels_correct[index])
-                del gameState.labels_correct[:]
-                del gameState.features_correct[:]
+        pipeMidPos = 50 + nextpipe['x'] + IMAGES['pipe'][0].get_width() / 2
+        currentPipeMidPos = 50 + currentpipe['x'] + IMAGES['pipe'][0].get_width() / 2
+        if currentPipeMidPos <= playerMidPos < currentPipeMidPos + 4:
+            currentpipe = upperPipes[1]
+            score += 1
+            SOUNDS['point'].play()
+            for index in range(0, len(gameState.features_correct)):
+                gameState.features.append(gameState.features_correct[index])
+                gameState.labels.append(gameState.labels_correct[index])
+            del gameState.labels_correct[:]
+            del gameState.features_correct[:]
+        if pipeMidPos - 20 <= playerMidPos < pipeMidPos + 4:
+            nextpipe = upperPipes[1]
 
         # playerIndex basex change
         if (loopIter + 1) % 3 == 0:
