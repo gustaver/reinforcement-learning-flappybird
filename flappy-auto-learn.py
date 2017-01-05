@@ -268,6 +268,7 @@ def mainGame(movementInfo):
                     gameState.training = not gameState.training
                 if event.key == K_t:
                     gameState.classifier.fit(gameState.features, gameState.labels)
+                    joblib.dump(gameState.classifier, 'classifier.pkl')
                 if event.key == K_p:
                     print("#features:" + str(len(gameState.features)))
                     print("#labels:" + str(len(gameState.labels)))
