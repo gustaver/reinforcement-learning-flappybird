@@ -277,13 +277,13 @@ def mainGame(movementInfo):
                 if event.key == K_w:
                     save_features = gameState.features
                     save_labels = gameState.labels
-                    numpy.savetxt("saved-labels", save_labels, delimiter = ",")
-                    numpy.savetxt("saved-features", save_features, delimiter = ",")
+                    joblib.dump(save_labels, "saved-labels.pkl")
+                    joblib.dump(save_features, "saved-features.pkl")
                 if event.key == K_r:
-                    load_features = numpy.loadtxt("saved-features", delimiter = ",")
-                    load_labels = numpy.loadtxt("saved-labels", delimiter = ",")
-                    gameState.features = numpy.ndarray.tolist(load_features)
-                    gameState.labels = numpy.ndarray.tolist(load_labels)
+                    load_features = joblib.load("saved-features.pkl")
+                    load_labels = joblib.load("saved-labels.pkl")
+                    gameState.labels = load_labels
+                    gameState.features = load_features
                 if event.key == K_s:
                     joblib.dump(gameState.classifier, 'classifier.pkl')
                 if event.key == K_f:
