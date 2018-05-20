@@ -1,10 +1,9 @@
+# This flappy bird game is used to build training data, which can be outputted to a CSV file, and then used for building models (classifiers) to be used in the other flappy bird game in this project 
+
 from itertools import cycle
 import random
 import sys
-from sklearn.svm import SVC
-import numpy
-import pickle
-from sklearn.externals import joblib
+import numpy as np
 
 import pygame
 from pygame.locals import *
@@ -53,31 +52,53 @@ PIPES_LIST = (
     'assets/sprites/pipe-red.png',
 )
 
-class gameState():
-    training = True
-    classifier = SVC(kernel = "linear")
-    features = []
-    labels = []
-    features_correct = []
-    labels_correct = []
+try:
+    xrange
+except NameError:
+    xrange = range
 
+class DataBuilder():
     def __init__(self):
+        # If we are gathering training data or not 
         self.training = True
-        self.classifier = SVC(kernel = "linear")
-        self.labels = []
-        self.features_correct = []
-        self.labels_correct = []
+        # Data contains lists where last element is label and rest are features
+        self.Data = []
+        # Temporarily stores samples, which are transferred to Data upon successful plays between pipes (good data)
+        self.Data_tmp = []
 
-    def set_training(self):
+    # Switch between training (gathering data) and not training
+    def switch_training(self):
         self.training = not self.training
+    
+    # Add a sample to the temporary store, will be transferred upon successful play
+    def add_sample(self, sample):
+        if self.training:
+            self.Data_tmp.append(sample)
 
-    def train(self, features, labels):
-        classifier.fit(features, labels)
+    # Write data to a CSV file
+    def write_data(self, filename):
+        # Convert Data to NumPy array and write to file as CSV
+        print(np.array(self.Data))
+        np.savetxt(filename, np.array(self.Data), delimiter=',') 
 
-    def predict(self, features):
-        return classifier.predict(features)
+    # Print the current state of data building to the console 
+    def print_state(self):
+        print("# samples = " + str(len(self.Data)))
+    
+    # Successful play, commit temporary data to training data (good plays)
+    def commit_data(self):
+        # Transfer from temporary to training data 
+        self.Data.extend(self.Data_tmp)
+        # Clear temporary 
+        self.discard()
+    
+    # Discard any data stored in temporary 
+    def discard(self):
+        del self.Data_tmp[:]
 
 def main():
+    global data_builder
+    data_builder = DataBuilder()
     global SCREEN, FPSCLOCK
     pygame.init()
     FPSCLOCK = pygame.time.Clock()
@@ -194,7 +215,7 @@ def showWelcomeAnimation():
 
         # adjust playery, playerIndex, basex
         if (loopIter + 1) % 5 == 0:
-            playerIndex = playerIndexGen.next()
+            playerIndex = next(playerIndexGen)
         loopIter = (loopIter + 1) % 30
         basex = -((-basex + 4) % baseShift)
         playerShm(playerShmVals)
@@ -246,56 +267,41 @@ def mainGame(movementInfo):
 
 
     while True:
-        flapped = False
-        current_state = [playery, pow(playery, 2), upperPipes[0]['x'], pow(upperPipes[0]['x'], 2), upperPipes[0]['y'], pow(upperPipes[0]['y'], 2)]
-        if gameState.training == False:
-            if gameState.classifier.predict([current_state])[0] == 1:
-                flapped = True
-                playerVelY = playerFlapAcc
-                playerFlapped = True
-                SOUNDS['wing'].play()
+        next_upper = upperPipes[0]
+        next_lower = lowerPipes[0]
+        dist_next = next_lower['x'] - playerx
+        if dist_next < -40:
+            # Past current pipe, shift focus to next pipes
+            next_upper = upperPipes[1]
+            next_lower = lowerPipes[1]
+            dist_next = next_lower['x'] - playerx
+        # Feature is bird y, distance to next pipe x, upper pipe y, lower pipe y
+        sample = [playery, dist_next, next_upper['y'], next_lower['y']]
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 pygame.quit()
                 sys.exit()
-            if event.type == KEYDOWN:
-                if event.key == K_a:
-                    gameState.training = not gameState.training
+            elif event.type == KEYUP:
+                sample.append(0)
+                data_builder.add_sample(sample)
+            elif event.type == KEYDOWN:
                 if event.key == K_t:
-                    gameState.classifier.fit(gameState.features, gameState.labels)
+                    # Switch between gathering training data and not
+                    data_builder.switch_training()
                 if event.key == K_p:
-                    print("#features:" + str(len(gameState.features)))
-                    print("#labels:" + str(len(gameState.labels)))
-                    print("#flaps:" + str(gameState.labels.count(1)))
-                    print("#NOTflaps:" + str(gameState.labels.count(0)))
+                    # Print the current state of data gathering 
+                    data_builder.print_state()
                 if event.key == K_w:
-                    save_features = gameState.features
-                    save_labels = gameState.labels
-                    numpy.savetxt("saved-labels", save_labels, delimiter = ",")
-                    numpy.savetxt("saved-features", save_features, delimiter = ",")
-                if event.key == K_r:
-                    load_features = numpy.loadtxt("saved-features", delimiter = ",")
-                    load_labels = numpy.loadtxt("saved-labels", delimiter = ",")
-                    gameState.features = numpy.ndarray.tolist(load_features)
-                    gameState.labels = numpy.ndarray.tolist(load_labels)
-                if event.key == K_s:
-                    joblib.dump(gameState.classifier, 'classifier.pkl')
-                if event.key == K_f:
-                    gameState.classifier = joblib.load('classifier.pkl')
-                if gameState.training == True:
-                    if event.key == K_SPACE:
-                        if playery > -2 * IMAGES['player'][0].get_height():
-                            flapped = True
-                            gameState.features_correct.append(current_state)
-                            gameState.labels_correct.append(1)
-                            playerVelY = playerFlapAcc
-                            playerFlapped = True
-                            SOUNDS['wing'].play()
-            if event.type == KEYUP:
-                if flapped == False:
-                    gameState.features_correct.append(current_state)
-                    gameState.labels_correct.append(0)
-
+                    # Write data to output CSV
+                    data_builder.write_data('flap_data.csv')
+                if event.key == K_SPACE:
+                    # Flap 
+                    if playery > -2 * IMAGES['player'][0].get_height():
+                        sample.append(1)
+                        data_builder.add_sample(sample)
+                        playerVelY = playerFlapAcc
+                        playerFlapped = True
+                        SOUNDS['wing'].play()
 
         # check for crash here
         crashTest = checkCrash({'x': playerx, 'y': playery, 'index': playerIndex},
@@ -318,15 +324,11 @@ def mainGame(movementInfo):
             if pipeMidPos <= playerMidPos < pipeMidPos + 4:
                 score += 1
                 SOUNDS['point'].play()
-                for index in range(0, len(gameState.features_correct)):
-                    gameState.features.append(gameState.features_correct[index])
-                    gameState.labels.append(gameState.labels_correct[index])
-                del gameState.labels_correct[:]
-                del gameState.features_correct[:]
+                data_builder.commit_data()
 
         # playerIndex basex change
         if (loopIter + 1) % 3 == 0:
-            playerIndex = playerIndexGen.next()
+            playerIndex = next(playerIndexGen)
         loopIter = (loopIter + 1) % 30
         basex = -((-basex + 100) % baseShift)
 
@@ -372,8 +374,8 @@ def mainGame(movementInfo):
 
 def showGameOverScreen(crashInfo):
     """crashes the player down ans shows gameover image"""
-    del gameState.labels_correct[:]
-    del gameState.features_correct[:]
+    # Player died, collected data is not valuable, flush 
+    data_builder.discard()
     score = crashInfo['score']
     playerx = SCREENWIDTH * 0.2
     playery = crashInfo['y']
@@ -524,4 +526,3 @@ def getHitmask(image):
 
 if __name__ == '__main__':
     main()
-    gameState = gameState()
