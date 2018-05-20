@@ -9,4 +9,4 @@ Keras
 # How to run: 
 *flappy_build_data.py* automatically starts in training mode. To switch training mode on/off, press t (train). To print how many samples have been collected to far, press (print). To output the data to *flappy_data.csv*, press w (write). 
 
-#Enjoy!
+# Enjoy!
