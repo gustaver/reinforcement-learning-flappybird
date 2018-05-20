@@ -1,14 +1,12 @@
 # Machine Learning Flappy Bird
-This is a supervised machine learning algorithm (support vector machine with a linear kernel) that I built into a Python version of Flappy Bird.
+Hobby project to help me learn how to use machine learning libraries. The project is structured so that *flappy_build_data.py* is used to play the game and generate training data (data only gets added upon successful points). Then a .csv of the training data can be outputted, and used to train a classifier model. This model is then used in *flappy.py* to play autonomously. 
 
-#Introduction
-The game is currently in its infancy, and the interface for the user is perhaps
-a bit clunky. However, it's pretty straightforward: you play, the bird learns,
-the machine plays (don't worry, it's not smart enough to be a Terminator).
+# Requirements: 
+NumPy, 
+PyGame, 
+Keras 
 
-#How to play:
-To run the game, simply type python flappy-auto-learn.py in the terminal. Make sure you have SciPy, Numpy and Scikit-learn installed ("pip install scipy", "pip install numpy", "pip install scikit-learn").
-
-The game starts in training mode, where the player can play and the players choices will be recorded. After sufficient play, the player can press "t" to activate learning mode, where the algorithm will learn the training data (this can take signifcant time based on the size of the training data). Otherwise the game will automatically traing the algorithms at peiods when the dataset has 500*2^n n=1,2,3... datapoints (at this point the game will freeze, this is just the algorithm training, let it load). Once the training is done, the player can press "a" to initialize auto mode, where the algorithm will automatically make choices based on the game state. Keys "w" and "r" are used to write/read the training data respectively. Keys "s" and "f" are used to write/read the classifier algorithm respectively (a classifier is provided out of the box, but it's not great since it's only been training for 3 minutes). Key "p" can be used during play to print training information to the terminal.
+# How to run: 
+*flappy_build_data.py* automatically starts in training mode. To switch training mode on/off, press t (train). To print how many samples have been collected to far, press (print). To output the data to *flappy_data.csv*, press w (write). 
 
 #Enjoy!
