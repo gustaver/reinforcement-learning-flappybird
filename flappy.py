@@ -1,10 +1,7 @@
-# This flappy bird game uses a Keras model (filename = 'flappy_classifier') in order to play the game autonomously 
-
 from itertools import cycle
 import random
 import sys
-import numpy as np
-from keras.models import load_model
+from agent import Agent
 
 import pygame
 from pygame.locals import *
@@ -22,35 +19,35 @@ IMAGES, SOUNDS, HITMASKS = {}, {}, {}
 PLAYERS_LIST = (
     # red bird
     (
-        'assets/sprites/redbird-upflap.png',
-        'assets/sprites/redbird-midflap.png',
-        'assets/sprites/redbird-downflap.png',
+        'assets/sprites/redbird-upflap.bmp',
+        'assets/sprites/redbird-midflap.bmp',
+        'assets/sprites/redbird-downflap.bmp',
     ),
     # blue bird
     (
         # amount by which base can maximum shift to left
-        'assets/sprites/bluebird-upflap.png',
-        'assets/sprites/bluebird-midflap.png',
-        'assets/sprites/bluebird-downflap.png',
+        'assets/sprites/bluebird-upflap.bmp',
+        'assets/sprites/bluebird-midflap.bmp',
+        'assets/sprites/bluebird-downflap.bmp',
     ),
     # yellow bird
     (
-        'assets/sprites/yellowbird-upflap.png',
-        'assets/sprites/yellowbird-midflap.png',
-        'assets/sprites/yellowbird-downflap.png',
+        'assets/sprites/yellowbird-upflap.bmp',
+        'assets/sprites/yellowbird-midflap.bmp',
+        'assets/sprites/yellowbird-downflap.bmp',
     ),
 )
 
 # list of backgrounds
 BACKGROUNDS_LIST = (
-    'assets/sprites/background-day.png',
-    'assets/sprites/background-night.png',
+    'assets/sprites/background-day.bmp',
+    'assets/sprites/background-night.bmp',
 )
 
 # list of pipes
 PIPES_LIST = (
-    'assets/sprites/pipe-green.png',
-    'assets/sprites/pipe-red.png',
+    'assets/sprites/pipe-green.bmp',
+    'assets/sprites/pipe-red.bmp',
 )
 
 try:
@@ -58,15 +55,9 @@ try:
 except NameError:
     xrange = range
 
-class Classifier():
-    def __init__(self, filename):
-        self.model = load_model(filename)
-
-    # Given a current game state, predict flap or not flap 
-    def flap(self, state):
-        return True if self.model.predict(np.array([state]))[0] > 0.5 else False 
-
 def main():
+    global agent 
+    agent = Agent()
     global SCREEN, FPSCLOCK
     pygame.init()
     FPSCLOCK = pygame.time.Clock()
@@ -75,24 +66,24 @@ def main():
 
     # numbers sprites for score display
     IMAGES['numbers'] = (
-        pygame.image.load('assets/sprites/0.png').convert_alpha(),
-        pygame.image.load('assets/sprites/1.png').convert_alpha(),
-        pygame.image.load('assets/sprites/2.png').convert_alpha(),
-        pygame.image.load('assets/sprites/3.png').convert_alpha(),
-        pygame.image.load('assets/sprites/4.png').convert_alpha(),
-        pygame.image.load('assets/sprites/5.png').convert_alpha(),
-        pygame.image.load('assets/sprites/6.png').convert_alpha(),
-        pygame.image.load('assets/sprites/7.png').convert_alpha(),
-        pygame.image.load('assets/sprites/8.png').convert_alpha(),
-        pygame.image.load('assets/sprites/9.png').convert_alpha()
+        pygame.image.load('assets/sprites/0.bmp').convert_alpha(),
+        pygame.image.load('assets/sprites/1.bmp').convert_alpha(),
+        pygame.image.load('assets/sprites/2.bmp').convert_alpha(),
+        pygame.image.load('assets/sprites/3.bmp').convert_alpha(),
+        pygame.image.load('assets/sprites/4.bmp').convert_alpha(),
+        pygame.image.load('assets/sprites/5.bmp').convert_alpha(),
+        pygame.image.load('assets/sprites/6.bmp').convert_alpha(),
+        pygame.image.load('assets/sprites/7.bmp').convert_alpha(),
+        pygame.image.load('assets/sprites/8.bmp').convert_alpha(),
+        pygame.image.load('assets/sprites/9.bmp').convert_alpha()
     )
 
     # game over sprite
-    IMAGES['gameover'] = pygame.image.load('assets/sprites/gameover.png').convert_alpha()
+    IMAGES['gameover'] = pygame.image.load('assets/sprites/gameover.bmp').convert_alpha()
     # message sprite for welcome screen
-    IMAGES['message'] = pygame.image.load('assets/sprites/message.png').convert_alpha()
+    IMAGES['message'] = pygame.image.load('assets/sprites/message.bmp').convert_alpha()
     # base (ground) sprite
-    IMAGES['base'] = pygame.image.load('assets/sprites/base.png').convert_alpha()
+    IMAGES['base'] = pygame.image.load('assets/sprites/base.bmp').convert_alpha()
 
     # sounds
     if 'win' in sys.platform:
@@ -200,8 +191,6 @@ def showWelcomeAnimation():
 
 
 def mainGame(movementInfo):
-    # Create and load classifier 
-    classifier = Classifier('flappy_classifier')
     score = playerIndex = loopIter = 0
     playerIndexGen = movementInfo['playerIndexGen']
     playerx, playery = int(SCREENWIDTH * 0.2), movementInfo['playery']
@@ -245,23 +234,49 @@ def mainGame(movementInfo):
             next_upper = upperPipes[1]
             next_lower = lowerPipes[1]
             dist_next = next_lower['x'] - playerx
-        # Feature is bird y, distance to next pipe x, upper pipe y, lower pipe y
-        sample = [playery, dist_next, next_upper['y'], next_lower['y']]
-        # Use Classifier to flap/not flap 
-        if classifier.flap(sample):
-            playerVelY = playerFlapAcc
-            playerFlapped = True
-            SOUNDS['wing'].play()
+        # Features are distance to next pipe x, lower pipe y, upper pipe y, player y
+        # Assume no flap
+        sample = [dist_next, next_lower['y'], next_upper['y'], playery, 0]
+
+        # Check to use Agent for flapping
+        if agent.autonomous or agent.reinforcement:
+            if agent.flap(sample[:-1]):
+                playerVelY = playerFlapAcc
+                playerFlapped = True
+                SOUNDS['wing'].play() 
+        
+        # Check keyboard events 
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 pygame.quit()
                 sys.exit()
+            if event.type == KEYDOWN:
+                if event.key == K_SPACE or event.key == K_UP:
+                    if playery > -2 * IMAGES['player'][0].get_height():
+                        playerVelY = playerFlapAcc
+                        playerFlapped = True
+                        SOUNDS['wing'].play()
+                        sample[4] = 1
+                if event.key == K_p:
+                    agent.print_state()
+                if event.key == K_t:
+                    agent.train()
+                if event.key == K_a:
+                    agent.switch_autonomous()
+                if event.key == K_r:
+                    global FPS 
+                    FPS = 30 if agent.reinforcement else 240
+                    agent.switch_reinforcement()
+        # Add sample 
+        agent.add_sample(sample)
                 
 
         # check for crash here
         crashTest = checkCrash({'x': playerx, 'y': playery, 'index': playerIndex},
                                upperPipes, lowerPipes)
         if crashTest[0]:
+            # Discard bad data since player crashed
+            agent.discard_tmp_data()
             return {
                 'y': playery,
                 'groundCrash': crashTest[1],
@@ -275,10 +290,11 @@ def mainGame(movementInfo):
         # check for score
         playerMidPos = playerx + IMAGES['player'][0].get_width() / 2
         for pipe in upperPipes:
-            pipeMidPos = 50 + pipe['x'] + IMAGES['pipe'][0].get_width() / 2
-            if pipeMidPos <= playerMidPos < pipeMidPos + 4:
+            pipeEndPos = pipe['x'] + IMAGES['pipe'][0].get_width()
+            if pipeEndPos <= playerMidPos < pipeEndPos + 4:
                 score += 1
                 SOUNDS['point'].play()
+                agent.save_tmp_data()
 
         # playerIndex basex change
         if (loopIter + 1) % 3 == 0:
