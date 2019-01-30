@@ -1,7 +1,6 @@
 import numpy as np
-import keras as k
-from keras.models import Sequential
-from keras.layers import Dense
+import tensorflow as tf
+from tensorflow.keras import layers, models
 
 class Agent:
     def __init__(self):
@@ -11,11 +10,11 @@ class Agent:
         self.data_tmp = []
         self.flap_perc = 0.01
 
-        classifier = Sequential()
-        classifier.add(Dense(4, kernel_initializer='uniform', activation='relu', input_shape=(4,)))
-        classifier.add(Dense(4, kernel_initializer='uniform', activation='relu'))
-        classifier.add(Dense(4, kernel_initializer='uniform', activation='relu'))
-        classifier.add(Dense(1, kernel_initializer='uniform', activation='sigmoid'))
+        classifier = tf.keras.Sequential()
+        classifier.add(layers.Dense(4, kernel_initializer='uniform', activation='relu', input_shape=(4,)))
+        classifier.add(layers.Dense(4, kernel_initializer='uniform', activation='relu'))
+        classifier.add(layers.Dense(4, kernel_initializer='uniform', activation='relu'))
+        classifier.add(layers.Dense(1, kernel_initializer='uniform', activation='sigmoid'))
         classifier.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
         self.model = classifier
     
