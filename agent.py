@@ -9,10 +9,12 @@ class Agent:
         self.reinforcement = False
         self.data = []
         self.data_tmp = []
+        self.flap_perc = 0.01
 
         classifier = Sequential()
-        classifier.add(Dense(7, kernel_initializer='uniform', activation='relu', input_shape=(7,)))
-        classifier.add(Dense(14, kernel_initializer='uniform', activation='relu'))
+        classifier.add(Dense(4, kernel_initializer='uniform', activation='relu', input_shape=(4,)))
+        classifier.add(Dense(4, kernel_initializer='uniform', activation='relu'))
+        classifier.add(Dense(4, kernel_initializer='uniform', activation='relu'))
         classifier.add(Dense(1, kernel_initializer='uniform', activation='sigmoid'))
         classifier.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
         self.model = classifier
@@ -21,17 +23,30 @@ class Agent:
         self.data_tmp.append(sample)
         
     def save_tmp_data(self):
-        self.data.extend(self.data_temp)
+        self.data.extend(self.data_tmp)
         del self.data_tmp[:]
 
     def discard_tmp_data(self):
         del self.data_tmp[:]
 
+    def switch_reinforcement(self):
+        self.reinforcement = True if self.reinforcement == False else False
+    
+    def switch_autonomous(self):
+        self.autonomous = True if self.autonomous == False else False
+
     def train(self):
         data = np.array(self.data)
-        X = data[:, :7]
+        X = data[:, :4]
         y = data[:, -1]
         self.model.fit(X, y, epochs = 100)
+        self.flap_perc = (data[:, -1] == 1).mean()
         
     def flap(self, sample):
-        return True if self.model.predict(np.array([sample]))[0] > 0.5 else False
+        return True if self.model.predict(np.array([sample]))[0] > self.flap_perc else False
+
+    def print_state(self):
+        data = np.array(self.data)
+        print('Number of training datapoints = ', data.shape[0])
+        print('Percentage of 1s = ', (data[:, -1] == 1).mean())
+        print('Percentage of 0s = ', (data[:, -1] == 0).mean())
