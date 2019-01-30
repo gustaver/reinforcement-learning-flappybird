@@ -22,35 +22,35 @@ IMAGES, SOUNDS, HITMASKS = {}, {}, {}
 PLAYERS_LIST = (
     # red bird
     (
-        'assets/sprites/redbird-upflap.png',
-        'assets/sprites/redbird-midflap.png',
-        'assets/sprites/redbird-downflap.png',
+        'assets/sprites/redbird-upflap.bmp',
+        'assets/sprites/redbird-midflap.bmp',
+        'assets/sprites/redbird-downflap.bmp',
     ),
     # blue bird
     (
         # amount by which base can maximum shift to left
-        'assets/sprites/bluebird-upflap.png',
-        'assets/sprites/bluebird-midflap.png',
-        'assets/sprites/bluebird-downflap.png',
+        'assets/sprites/bluebird-upflap.bmp',
+        'assets/sprites/bluebird-midflap.bmp',
+        'assets/sprites/bluebird-downflap.bmp',
     ),
     # yellow bird
     (
-        'assets/sprites/yellowbird-upflap.png',
-        'assets/sprites/yellowbird-midflap.png',
-        'assets/sprites/yellowbird-downflap.png',
+        'assets/sprites/yellowbird-upflap.bmp',
+        'assets/sprites/yellowbird-midflap.bmp',
+        'assets/sprites/yellowbird-downflap.bmp',
     ),
 )
 
 # list of backgrounds
 BACKGROUNDS_LIST = (
-    'assets/sprites/background-day.png',
-    'assets/sprites/background-night.png',
+    'assets/sprites/background-day.bmp',
+    'assets/sprites/background-night.bmp',
 )
 
 # list of pipes
 PIPES_LIST = (
-    'assets/sprites/pipe-green.png',
-    'assets/sprites/pipe-red.png',
+    'assets/sprites/pipe-green.bmp',
+    'assets/sprites/pipe-red.bmp',
 )
 
 try:
@@ -75,24 +75,24 @@ def main():
 
     # numbers sprites for score display
     IMAGES['numbers'] = (
-        pygame.image.load('assets/sprites/0.png').convert_alpha(),
-        pygame.image.load('assets/sprites/1.png').convert_alpha(),
-        pygame.image.load('assets/sprites/2.png').convert_alpha(),
-        pygame.image.load('assets/sprites/3.png').convert_alpha(),
-        pygame.image.load('assets/sprites/4.png').convert_alpha(),
-        pygame.image.load('assets/sprites/5.png').convert_alpha(),
-        pygame.image.load('assets/sprites/6.png').convert_alpha(),
-        pygame.image.load('assets/sprites/7.png').convert_alpha(),
-        pygame.image.load('assets/sprites/8.png').convert_alpha(),
-        pygame.image.load('assets/sprites/9.png').convert_alpha()
+        pygame.image.load('assets/sprites/0.bmp').convert_alpha(),
+        pygame.image.load('assets/sprites/1.bmp').convert_alpha(),
+        pygame.image.load('assets/sprites/2.bmp').convert_alpha(),
+        pygame.image.load('assets/sprites/3.bmp').convert_alpha(),
+        pygame.image.load('assets/sprites/4.bmp').convert_alpha(),
+        pygame.image.load('assets/sprites/5.bmp').convert_alpha(),
+        pygame.image.load('assets/sprites/6.bmp').convert_alpha(),
+        pygame.image.load('assets/sprites/7.bmp').convert_alpha(),
+        pygame.image.load('assets/sprites/8.bmp').convert_alpha(),
+        pygame.image.load('assets/sprites/9.bmp').convert_alpha()
     )
 
     # game over sprite
-    IMAGES['gameover'] = pygame.image.load('assets/sprites/gameover.png').convert_alpha()
+    IMAGES['gameover'] = pygame.image.load('assets/sprites/gameover.bmp').convert_alpha()
     # message sprite for welcome screen
-    IMAGES['message'] = pygame.image.load('assets/sprites/message.png').convert_alpha()
+    IMAGES['message'] = pygame.image.load('assets/sprites/message.bmp').convert_alpha()
     # base (ground) sprite
-    IMAGES['base'] = pygame.image.load('assets/sprites/base.png').convert_alpha()
+    IMAGES['base'] = pygame.image.load('assets/sprites/base.bmp').convert_alpha()
 
     # sounds
     if 'win' in sys.platform:
