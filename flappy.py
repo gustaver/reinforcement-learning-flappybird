@@ -264,6 +264,8 @@ def mainGame(movementInfo):
                 if event.key == K_a:
                     agent.switch_autonomous()
                 if event.key == K_r:
+                    global FPS 
+                    FPS = 30 if agent.reinforcement else 240
                     agent.switch_reinforcement()
         # Add sample 
         agent.add_sample(sample)
